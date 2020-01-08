@@ -197,7 +197,7 @@ static void coory(json_value* value, int x, int y){
 	if(coor_y[num][1]-coor_y[num][2]>0.5)righthand[num]=1;
 	if(coor_y[num][4]-coor_y[num][5]>0.5)lefthand[num]=1;
   //倒下
-  	if(coor_x[num][0]==16384 || coor_x[num][7]==16384 || coor_y[num][0]==16384 || coor_y[num][7]==16384){
+	if(coor_x[num][0]==16384 || coor_x[num][7]==16384 || coor_y[num][0]==16384 || coor_y[num][7]==16384){
 		//skip
 		//printf("skip!\n");
 	}else{
@@ -217,19 +217,19 @@ static void coory(json_value* value, int x, int y){
   //休息
 	if(working[num]==0 && righthand[num]==0 && lefthand[num]==0)rest[num]=1;
   //站姿
-  	if(fall[num]==0 && sit[num]==0 && squat[num]==0)station=1;
+	if(fall[num]==0 && sit[num]==0 && squat[num]==0)station=1;
   //坐姿有問題
-  	if(sit[num]==1 && righthand[num]==1 && lefthand[num]==1)sit_hand[num]=1;
+	if(sit[num]==1 && righthand[num]==1 && lefthand[num]==1)sit_hand[num]=1;
   //坐姿工作中
-  	if(sit[num]==1 && working[num]==1 )sit_working[num]=1;
+	if(sit[num]==1 && working[num]==1 )sit_working[num]=1;
   //坐姿休息
-  	if(sit[num]==1 && rest[num]==1 )sit_rest[num]=1;
+	if(sit[num]==1 && rest[num]==1 )sit_rest[num]=1;
   //站姿有問題
-  	if(station[num]==1 && righthand[num]==1 && lefthand[num]==1)station_hand[num]=1;
+	if(station[num]==1 && righthand[num]==1 && lefthand[num]==1)station_hand[num]=1;
   //站姿工作中
-  	if(station[num]==1 && working[num]==1)station_working[num]=1;
+	if(station[num]==1 && working[num]==1)station_working[num]=1;
   //站姿休息
-  	if(station[num]==1 && rest[num]==1)station_rest[num]=1;
+	if(station[num]==1 && rest[num]==1)station_rest[num]=1;
 	if(righthand[num]||lefthand[num]||fall[num]||squat[num]||work[num]||sit[num]||station[num]||station_rest[num]||station_working[num]||station_hand[num]||sit_working[num]||sit_rest[num]||sit_hand[num]||rest[num])output();
 }
 
@@ -242,16 +242,16 @@ static void output(){
 	if(righthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
 	if(lefthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
 	if(squat[num])printf("人類 %d 蹲下了!@ %s \n", num, ctime(&result));
-  	//if(sit[num])printf("人類 %s 坐著!@ %s \n",num, ctime(&result));
-  	//if(working[num])printf("人類 %s 工作中!@ %s \n",num, ctime(&result));
-  	if(sit_hand[num])printf("人類 %s 坐著有問題!@ %s \n",num, ctime(&result));
-  	if(sit_working[num])printf("人類 %s 坐著工作中!@ %s \n",num, ctime(&result));
-  	if(sit_rest[num])printf("人類 %s 坐著休息!@ %s \n",num, ctime(&result));
-  	if(station_hand[num])printf("人類 %s 站著有問題!@ %s \n",num, ctime(&result));
-  	if(station_working[num])printf("人類 %s 請勿站著工作!@ %s \n",num, ctime(&result));
-  	if(station_rest[num])printf("人類 %s 站著休息!@ %s \n",num, ctime(&result));
-  	//if(ststion[num])printf("人類 %s 站著!@ %s \n",num, ctime(&result));
-  	//if(rest[num])printf("人類 %s 休息中!@ %s \n",num, ctime(&result));
+	//if(sit[num])printf("人類 %s 坐著!@ %s \n",num, ctime(&result));
+	//if(working[num])printf("人類 %s 工作中!@ %s \n",num, ctime(&result));
+	if(sit_hand[num])printf("人類 %s 坐著有問題!@ %s \n",num, ctime(&result));
+	if(sit_working[num])printf("人類 %s 坐著工作中!@ %s \n",num, ctime(&result));
+	if(sit_rest[num])printf("人類 %s 坐著休息!@ %s \n",num, ctime(&result));
+	if(station_hand[num])printf("人類 %s 站著有問題!@ %s \n",num, ctime(&result));
+	if(station_working[num])printf("人類 %s 請勿站著工作!@ %s \n",num, ctime(&result));
+	if(station_rest[num])printf("人類 %s 站著休息!@ %s \n",num, ctime(&result));
+	//if(ststion[num])printf("人類 %s 站著!@ %s \n",num, ctime(&result));
+	//if(rest[num])printf("人類 %s 休息中!@ %s \n",num, ctime(&result));
 
 }
 
