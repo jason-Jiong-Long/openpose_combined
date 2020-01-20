@@ -178,17 +178,20 @@ static void coorx(json_value* value, int x, int y){
 static void coory(json_value* value, int x, int y){
 	coor_y[num][y]=value->u.dbl;
   //坐姿
-	if(coor_y[num][3]==16384 && coor_y[num][2]==16384 && coor_y[num][1]==16384 && coor_y[num][1]==16384){
-	}else{
-		if(coor_y[num][8]-coor_y[num][9]<10 || coor_y[num][11]-coor_y[num][12]<10 || coor_y[num][8]-coor_y[num][9]>-10 || coor_y[num][11]-coor_y[num][12]>-10)sit[num]=1;
-	}
+	double Rslope = ((coor_y[num][8]-coor_y[num][9])/(coor_x[num][8]-coor_x[num][9]));
+	double Lslope = ((coor_y[num][11]-coor_y[num][12])/(coor_x[num][11]-coor_x[num][12]));
+	int sittest = 0;
+	if((Rslope > -1 && Rslope < 1)||(Lslope > -1 && Lslope < 1))sittest=1;
+	if(fall[num]==0&&sittest==1)sit[num]=1;
   //工作中
 	if(coor_y[num][3]==16384 && coor_y[num][2]==16384 && coor_y[num][1]==16384){
-	}else{
+		//TODO
+	}
+	else{
 		if(coor_y[num][1]-coor_y[num][3]>0.5 && coor_y[num][2]-coor_y[num][1]>0.5)working[num]=1;
-  }
+	}
   //蹲姿
-	printf("dbg = %d %f %f %f %f\n", squat[num],coor_y[num][7],coor_y[num][6],coor_y[num][10],coor_y[num][9]);
+//	printf("dbg = %d %f %f %f %f\n", squat[num],coor_y[num][7],coor_y[num][6],coor_y[num][10],coor_y[num][9]);
 	if(coor_x[num][9]==16384 && coor_x[num][8]==16384 && coor_x[num][12] && coor_x[num][11] &&coor_y[num][9]==16384 && coor_y[num][8]==16384 && coor_y[num][12]==16384 && coor_y[num][11]==16384){
 	}else{
 		if(coor_y[num][8] > coor_y[num][9]&&coor_y[num][11] > coor_y[num][12])squat[num]=1;
@@ -202,7 +205,7 @@ static void coory(json_value* value, int x, int y){
 		//printf("skip!\n");
 	}else{
 		double slope = ((coor_y[num][7]-coor_y[num][0])/(coor_x[num][7]-coor_x[num][0]));
-		printf("abcd = %f\n", slope);
+		//printf("abcd = %f\n", slope);
 		//char* part_name=body_parts(x);
 		//YOLO
 		//if(coor_y[num][y]!=0)coor_y_old[num][y]=coor_y[num][y];
@@ -217,9 +220,9 @@ static void coory(json_value* value, int x, int y){
   //休息
 	if(working[num]==0 && righthand[num]==0 && lefthand[num]==0)rest[num]=1;
   //站姿
-	if(fall[num]==0 && sit[num]==0 && squat[num]==0)station=1;
+	if(fall[num]==0 && sit[num]==0 && squat[num]==0)station[num]=1;
   //坐姿有問題
-	if(sit[num]==1 && righthand[num]==1 && lefthand[num]==1)sit_hand[num]=1;
+	if((sit[num]==1 && righthand[num]==1) || (sit[num]==1 && lefthand[num]==1))sit_hand[num]=1;
   //坐姿工作中
 	if(sit[num]==1 && working[num]==1 )sit_working[num]=1;
   //坐姿休息
@@ -230,7 +233,7 @@ static void coory(json_value* value, int x, int y){
 	if(station[num]==1 && working[num]==1)station_working[num]=1;
   //站姿休息
 	if(station[num]==1 && rest[num]==1)station_rest[num]=1;
-	if(righthand[num]||lefthand[num]||fall[num]||squat[num]||work[num]||sit[num]||station[num]||station_rest[num]||station_working[num]||station_hand[num]||sit_working[num]||sit_rest[num]||sit_hand[num]||rest[num])output();
+	if(righthand[num]||lefthand[num]||fall[num]||squat[num]||working[num]||sit[num]||station[num]||station_rest[num]||station_working[num]||station_hand[num]||sit_working[num]||sit_rest[num]||sit_hand[num]||rest[num])output();
 }
 
 static void output(){
@@ -239,19 +242,19 @@ static void output(){
 	//print the results or other stuffs
 	result = time(NULL);
 	if(fall[num])printf("人類 %d 倒下了！@ %s \n", num, ctime(&result));
-	if(righthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
-	if(lefthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
-	if(squat[num])printf("人類 %d 蹲下了!@ %s \n", num, ctime(&result));
-	//if(sit[num])printf("人類 %s 坐著!@ %s \n",num, ctime(&result));
-	//if(working[num])printf("人類 %s 工作中!@ %s \n",num, ctime(&result));
-	if(sit_hand[num])printf("人類 %s 坐著有問題!@ %s \n",num, ctime(&result));
-	if(sit_working[num])printf("人類 %s 坐著工作中!@ %s \n",num, ctime(&result));
-	if(sit_rest[num])printf("人類 %s 坐著休息!@ %s \n",num, ctime(&result));
-	if(station_hand[num])printf("人類 %s 站著有問題!@ %s \n",num, ctime(&result));
-	if(station_working[num])printf("人類 %s 請勿站著工作!@ %s \n",num, ctime(&result));
-	if(station_rest[num])printf("人類 %s 站著休息!@ %s \n",num, ctime(&result));
-	//if(ststion[num])printf("人類 %s 站著!@ %s \n",num, ctime(&result));
-	//if(rest[num])printf("人類 %s 休息中!@ %s \n",num, ctime(&result));
+//	if(righthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
+//	if(lefthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
+//	if(squat[num])printf("人類 %d 蹲下了!@ %s \n", num, ctime(&result));
+//	if(sit[num])printf("人類 %d 坐著!@ %s \n",num, ctime(&result));
+//	if(working[num])printf("人類 %d 工作中!@ %s \n",num, ctime(&result));
+	if(sit_hand[num])printf("人類 %d 坐著有問題!@ %s \n",num, ctime(&result));
+	if(sit_working[num])printf("人類 %d 坐著工作中!@ %s \n",num, ctime(&result));
+	if(sit_rest[num])printf("人類 %d 坐著休息!@ %s \n",num, ctime(&result));
+	if(station_hand[num])printf("人類 %d 站著有問題!@ %s \n",num, ctime(&result));
+	if(station_working[num])printf("人類 %d 請勿站著工作!@ %s \n",num, ctime(&result));
+	if(station_rest[num])printf("人類 %d 站著休息!@ %s \n",num, ctime(&result));
+	//if(ststion[num])printf("人類 %d 站著!@ %s \n",num, ctime(&result));
+	//if(rest[num])printf("人類 %d 休息中!@ %s \n",num, ctime(&result));
 
 }
 
@@ -262,9 +265,8 @@ static void spit(json_value* value, int x, int y){
 		case 2:
 		       //confidence, used as counter
 		       //printf("x: %d, This is c: %f!\n",x/3,value->u.dbl);
-		       //if(y==3)num++;
-			   //printf("Y: %d\n",y);
-			   break;
+
+		       break;
 		default:break;
 	}
 }
