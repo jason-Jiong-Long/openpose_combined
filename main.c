@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 #include "json.h"
+#include <sys/socket.h> //for socket
+#include <arpa/inet.h> //inet_addr
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -37,6 +39,16 @@ char filename[62] = "/home/e516/openpose_combined/json/000000000000_keypoints.js
 long long int file_i = 0;
 time_t old_result = 0;
 time_t result;
+
+int sock;
+struct sockaddr_in server;
+char message[1000];
+char new_message[1001];
+int msg_len=0;
+unsigned char close_tag[] = "\xFF";
+
+//sleep time in milliseconds
+int wait_time = 1000;
 /*
 gcc main.c json.c -lm
  */
@@ -239,7 +251,17 @@ static void coory(json_value* value, int x, int y){
 static void output(){
 	//fix for the 0th person is not existent, might need to look into it more
 	if(num==0)return;
-	//print the results or other stuffs
+	if(num>99)return;
+	
+	//3 instead of 2 to add \0 on end trail, suppressing warning during compile
+	char num_c[3];
+	int action = 0;
+	char action_c[3];
+	num--;
+	sprintf(num_c, "%02x", (unsigned char)num);
+	num++;
+	msg_len += 1;
+	memcpy(message, num_c, msg_len);
 	result = time(NULL);
 	if(fall[num])printf("人類 %d 倒下了！@ %s \n", num, ctime(&result));
 //	if(righthand[num])printf("人類 %d 有問題 @ %s！\n", num, ctime(&result));
@@ -255,6 +277,21 @@ static void output(){
 	if(station_rest[num])printf("人類 %d 站著休息!@ %s \n",num, ctime(&result));
 	//if(ststion[num])printf("人類 %d 站著!@ %s \n",num, ctime(&result));
 	//if(rest[num])printf("人類 %d 休息中!@ %s \n",num, ctime(&result));
+    if(fall[num]||squat[num])action = 1;
+	else if(sit_hand[num])action = 2;
+	else if(sit_working[num])action = 3;
+	else if(sit[num])action = 4;
+	else if(station_hand[num])action = 6;
+	else if(station_working[num])action = 7;
+	else if(station_rest[num])action = 5;
+	else action = 0;
+	
+	
+	if(action!=0){
+		sprintf(action_c, "%02x", (unsigned char)action);
+		msg_len += 1;
+		memcpy(message[msg_len], action_c[0], msg_len);
+	}
 
 }
 
@@ -330,16 +367,44 @@ int main(int argc, char** argv){
 			}
 
 			process_value(value, 0, 0);
-
+			//Create socket
+			sock = socket(AF_INET , SOCK_STREAM , 0);
+			if (sock == -1)
+			{
+				printf("Could not create socket");
+			}
+			puts("Socket created");
+			 
+			server.sin_addr.s_addr = inet_addr("127.0.0.1");
+			server.sin_family = AF_INET;
+			server.sin_port = htons( 2000 );
+		 
+			//Connect to remote server
+			if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+			{
+				perror("connect failed. Error");
+			}
+			sprintf(new_message, "%02x", (unsigned char)num);
+			msg_len += 1;
+			for(int i1 = 0; i1 < msg_len; i1++)new_message[msg_len+1] = message[msg_len];
+			msg_len += 1;
+			memcpy(new_message[msg_len], close_tag[0], msg_len);
+			//Send some data
+			if( send(sock , new_message , msg_len , 0) < 0)
+			{
+				puts("Send failed");
+			}
+			 
+			close(sock);
 			json_value_free(value);
 			free(file_contents);
-
-			/*#ifdef _WIN32
-			Sleep(pollingDelay);
+			
+			#ifdef _WIN32
+			Sleep(wait_time);
 			#else
-			usleep(pollingDelay*1000);
+			usleep(wait_time*1000);
 			#endif
-			*/
+			
 			remove(filename);
 			for(int l=0; l<=num; l++){
 				for(int n=0; n<16; n++){
