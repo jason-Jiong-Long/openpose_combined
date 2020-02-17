@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #include "json.h"
 
 #ifdef _WIN32
@@ -31,9 +32,9 @@ int lefthand[100]={[0 ... 99] = 0},righthand[100]={[0 ... 99] = 0}, hand_int[100
 int num = -1;
 int num_old = 0;
 char defaultfilename[16] = "_keypoints.json";
-char prependfilename[35] = "/home/e516/openpose_combined/json/";
+char prependfilename[34] = "/home/ele/openpose_combined/json/";
 char filenamestring[13] = "000000000000";
-char filename[62] = "/home/e516/openpose_combined/json/000000000000_keypoints.json";
+char filename[61] = "/home/ele/openpose_combined/json/000000000000_keypoints.json";
 long long int file_i = 0;
 time_t old_result = 0;
 time_t result;
@@ -177,28 +178,50 @@ static void coorx(json_value* value, int x, int y){
 }
 static void coory(json_value* value, int x, int y){
 	coor_y[num][y]=value->u.dbl;
-  //坐姿
+  //運算
 	double Rslope = ((coor_y[num][8]-coor_y[num][9])/(coor_x[num][8]-coor_x[num][9]));
 	double Lslope = ((coor_y[num][11]-coor_y[num][12])/(coor_x[num][11]-coor_x[num][12]));
+  double xaxis = pow(coor_x[num][7]-coor_x[num][0],2);
+  double yaxis = pow(coor_y[num][7]-coor_y[num][0],2);
+  double distance = pow(xaxis+yaxis,0.5);
+  double Rslope_xaxis = pow(coor_x[num][9]-coor_x[num][8],2);
+  double Rslope_yaxis = pow(coor_y[num][9]-coor_y[num][8],2);
+  double Lslope_xaxis = pow(coor_x[num][12]-coor_x[num][11],2);
+  double Lslope_yaxis = pow(coor_y[num][12]-coor_y[num][11],2);
+  double Rslope_distance = pow(Rslope_xaxis+Rslope_yaxis,0.5);
+  double Lslope_distance = pow(Lslope_xaxis+Lslope_yaxis,0.5);
 	int sittest = 0;
-	if((Rslope > -1 && Rslope < 1)||(Lslope > -1 && Lslope < 1))sittest=1;
-	if(fall[num]==0&&sittest==1)sit[num]=1;
-  //工作中
+  int sittest1 = 0;
+  int Rstation = 0;
+  int Lstation = 0;
+  int resttest = 0;
+  //坐姿
+	if((Rslope >= -1 && Rslope <= 1)||(Lslope >= -1 && Lslope <= 1))sittest=1;
+  if(fabs(coor_x[num][7]-coor_x[num][0])<=(distance/2))sittest1 = 1;
+	if(fall[num]==0&&sittest==1&&sittest1==1)sit[num]=1;
+  //站姿
+  if(fabs(coor_x[num][9]-coor_x[num][8])<=(Rslope_distance/2))Rstation = 1;
+  if(fabs(coor_x[num][12]-coor_x[num][11])<=(Lslope_distance/2))Lstation = 1;
+  if(fall[num]==0 && sittest1==1 && Rstation==1 && Lstation==1 )station[num]=1;
+  //舉半手
 	if(coor_y[num][3]==16384 && coor_y[num][2]==16384 && coor_y[num][1]==16384){
 		//TODO
 	}
 	else{
-		if(coor_y[num][1]-coor_y[num][3]>0.5 && coor_y[num][2]-coor_y[num][1]>0.5)working[num]=1;
+		if(fabs(coor_y[num][1]-coor_y[num][3])<=50 && coor_y[num][2]-coor_y[num][1]>=0.5)working[num]=1;
 	}
   //蹲姿
 //	printf("dbg = %d %f %f %f %f\n", squat[num],coor_y[num][7],coor_y[num][6],coor_y[num][10],coor_y[num][9]);
-	if(coor_x[num][9]==16384 && coor_x[num][8]==16384 && coor_x[num][12] && coor_x[num][11] &&coor_y[num][9]==16384 && coor_y[num][8]==16384 && coor_y[num][12]==16384 && coor_y[num][11]==16384){
-	}else{
-		if(coor_y[num][8] > coor_y[num][9]&&coor_y[num][11] > coor_y[num][12])squat[num]=1;
-	}
+//	if(coor_x[num][9]==16384 && coor_x[num][8]==16384 && coor_x[num][12] && coor_x[num][11] &&coor_y[num][9]==16384 && coor_y[num][8]==16384 && coor_y[num][12]==16384 && coor_y[num][11]==16384){
+//	}else{
+//		if(coor_y[num][8] > coor_y[num][9]&&coor_y[num][11] > coor_y[num][12])squat[num]=1;
+//	}
   //舉手
 	if(coor_y[num][1]-coor_y[num][2]>0.5)righthand[num]=1;
 	if(coor_y[num][4]-coor_y[num][5]>0.5)lefthand[num]=1;
+  //休息
+  if((coor_y[num][3]-coor_y[num][2]>=0.5 && coor_y[num][2]-coor_y[num][1]>=0.5) || (coor_y[num][6]-coor_y[num][5]>=0.5 && coor_y[num][5]-coor_y[num][4])>=0.5)resttest = 1;
+	if(working[num]==0 && righthand[num]==0 && lefthand[num]==0 && resttest==1)rest[num]=1;
   //倒下
 	if(coor_x[num][0]==16384 || coor_x[num][7]==16384 || coor_y[num][0]==16384 || coor_y[num][7]==16384){
 		//skip
@@ -212,15 +235,11 @@ static void coory(json_value* value, int x, int y){
 		//printf("==DEBUG== Human[%d], x1=%f, y1=%f, x8=%f, y8=%f",num,coor_x[num][0],coor_y[num][0],coor_x[num][1],coor_y[num][1]);
 		//printf(" x1-x8= %f, y1-y8=%f, Slope = %f\n",(coor_x[num][1]-coor_x[num][0]),(coor_y[num][1]-coor_y[num][0]), slope);
 
-		if(slope > -1 && slope < 1)fall[num]=1;
+		if(slope >= -1 && slope <= 1)fall[num]=1;
 		//if(coor_y[num][2]-coor_y[num][3]>0.5)lefthand[num]=1;
 		//printf("x: %d, coor_x[%d][%d] = %f\n",x/3,num,y,coor_y[num][y]);
 		//printf(", ycoor=%f, y=%d\n",coor_y[num][y],y),y,coor_y[num][y]);
 	}
-  //休息
-	if(working[num]==0 && righthand[num]==0 && lefthand[num]==0)rest[num]=1;
-  //站姿
-	if(fall[num]==0 && sit[num]==0 && squat[num]==0)station[num]=1;
   //坐姿有問題
 	if((sit[num]==1 && righthand[num]==1) || (sit[num]==1 && lefthand[num]==1))sit_hand[num]=1;
   //坐姿工作中
@@ -248,7 +267,7 @@ static void output(){
 //	if(sit[num])printf("人類 %d 坐著!@ %s \n",num, ctime(&result));
 //	if(working[num])printf("人類 %d 工作中!@ %s \n",num, ctime(&result));
 	if(sit_hand[num])printf("人類 %d 坐著有問題!@ %s \n",num, ctime(&result));
-	if(sit_working[num])printf("人類 %d 坐著工作中!@ %s \n",num, ctime(&result));
+//	if(sit_working[num])printf("人類 %d 坐著工作中!@ %s \n",num, ctime(&result));
 	if(sit_rest[num])printf("人類 %d 坐著休息!@ %s \n",num, ctime(&result));
 	if(station_hand[num])printf("人類 %d 站著有問題!@ %s \n",num, ctime(&result));
 	if(station_working[num])printf("人類 %d 請勿站著工作!@ %s \n",num, ctime(&result));
